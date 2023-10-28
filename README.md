@@ -65,11 +65,23 @@ To build the code for the first time, from the root directory of the project (i.
 
     $ scala-cli compile .
 
+If the Bloop server refuses to start, it ma be necessary to set a specific JVM before :
+
+    $ export JAVA_HOME=/path/to/jvm/home
+
+Bloop server errors can be shown with :
+
+    $ scala-cli --power bloop output
+
 This compiles all exercises and answers. You can also do:
 
     $ scala-cli console .
 
 to get a Scala REPL (prompt `scala>`) with access to exercises and answers, and then for example:
+
+    scala> import fpinscala.exercises.gettingstarted.MyProgram.*
+
+to import the definitions of the first chapter for instance, or:
 
     scala> import fpinscala.exercises.datastructures.List
 
