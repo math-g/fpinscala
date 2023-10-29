@@ -124,13 +124,27 @@ object List: // `List` companion object. Contains functions for creating and wor
     foldRight(l, Nil: List[Int], (elem, acc) => Cons(elem + 1, acc))
     //foldLeft(l, Nil: List[Int], (acc, elem) => Cons(elem + 1, acc)) => fail : inverse la List
 
-  def doubleToString(l: List[Double]): List[String] = ???
+  def doubleToString(l: List[Double]): List[String] =
+    foldRight(l, Nil: List[String], (elem, acc) => Cons(elem.toString, acc))
 
-  def map[A,B](l: List[A], f: A => B): List[B] = ???
+  def map[A,B](l: List[A], f: A => B): List[B] =
+    foldRight(l, Nil: List[B], (elem, acc) => Cons(f(elem), acc))
 
-  def filter[A](as: List[A], f: A => Boolean): List[A] = ???
+  def filter[A](as: List[A], f: A => Boolean): List[A] =
+    // implémentation sans foldRight
+    /*as match
+      case Nil => as
+      case Cons(h, t) if f(h) => Cons(h, filter(t, f))
+      case Cons(h, t) => filter(t, f)
+     */
+    foldRight(as, Nil: List[A], (elem, acc) => if f(elem) then Cons(elem, acc) else acc)
 
-  def flatMap[A,B](as: List[A], f: A => List[B]): List[B] = ???
+
+  def flatMap[A,B](as: List[A], f: A => List[B]): List[B] =
+    foldRight(as, Nil: List[B], (elem, acc) => append(f(elem), acc))
+    // alternative :
+    // concat(map(as, f))
+
 
   def filterViaFlatMap[A](as: List[A], f: A => Boolean): List[A] = ???
 
