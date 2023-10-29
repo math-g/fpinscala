@@ -93,7 +93,11 @@ object List: // `List` companion object. Contains functions for creating and wor
   def length[A](l: List[A]): Int =
     foldRight(l, 0: Int, (x, y) => 1 + y)
 
-  def foldLeft[A,B](l: List[A], acc: B, f: (B, A) => B): B = ???
+  @tailrec
+  def foldLeft[A,B](l: List[A], acc: B, f: (B, A) => B): B =
+    l match
+      case Nil => acc
+      case Cons(x, xs) => foldLeft(xs, f(acc, x), f)
 
   def sumViaFoldLeft(ns: List[Int]): Int = ???
 
