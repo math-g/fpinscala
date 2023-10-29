@@ -75,6 +75,7 @@ object List: // `List` companion object. Contains functions for creating and wor
         case _ => dropIter(tail(dropped))
     dropIter(l)
 
+  // Voir la solution, équivalent à un foldRight, plus efficace mais non tail recursive.
   def init[A](l: List[A]): List[A] =
     @tailrec
     def reverse(acc: List[A], curr: List[A]): List[A] =
@@ -89,7 +90,8 @@ object List: // `List` companion object. Contains functions for creating and wor
         case Cons(h, t) => initIter(Cons(h, acc), tail(curr))
     reverse(Nil, initIter(Nil, l))
 
-  def length[A](l: List[A]): Int = ???
+  def length[A](l: List[A]): Int =
+    foldRight(l, 0: Int, (x, y) => 1 + y)
 
   def foldLeft[A,B](l: List[A], acc: B, f: (B, A) => B): B = ???
 
