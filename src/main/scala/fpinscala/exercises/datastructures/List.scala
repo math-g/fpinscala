@@ -75,7 +75,19 @@ object List: // `List` companion object. Contains functions for creating and wor
         case _ => dropIter(tail(dropped))
     dropIter(l)
 
-  def init[A](l: List[A]): List[A] = ???
+  def init[A](l: List[A]): List[A] =
+    @tailrec
+    def reverse(acc: List[A], curr: List[A]): List[A] =
+      curr match
+        case Nil => acc
+        case Cons(h, t) => reverse(Cons(h, acc), tail(curr))
+    @tailrec
+    def initIter(acc: List[A], curr: List[A]): List[A] =
+      curr match
+        case Nil => sys.error("Cannot call init on an empty List.")
+        case Cons(head, Nil) => acc
+        case Cons(h, t) => initIter(Cons(h, acc), tail(curr))
+    reverse(Nil, initIter(Nil, l))
 
   def length[A](l: List[A]): Int = ???
 
