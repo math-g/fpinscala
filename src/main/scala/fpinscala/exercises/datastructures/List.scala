@@ -108,13 +108,21 @@ object List: // `List` companion object. Contains functions for creating and wor
   def lengthViaFoldLeft[A](l: List[A]): Int =
     foldLeft(l, 0, (acc, elem) => 1 + acc)
 
-  def reverse[A](l: List[A]): List[A] = ???
+  def reverse[A](l: List[A]): List[A] =
+    foldLeft(l, Nil: List[A], (acc, h) => Cons(h, acc))
 
-  def appendViaFoldRight[A](l: List[A], r: List[A]): List[A] = ???
+  def foldRightViaFoldLeft[A,B](as: List[A], acc: B, f: (A, B) => B): B =
+    foldLeft(reverse(as), acc, (b, a) => f(a, b))
 
-  def concat[A](l: List[List[A]]): List[A] = ???
+  def appendViaFoldRight[A](l: List[A], r: List[A]): List[A] =
+    foldRight(l, r, (curr: A, acc: List[A]) => Cons(curr, acc))
 
-  def incrementEach(l: List[Int]): List[Int] = ???
+  def concat[A](l: List[List[A]]): List[A] =
+    foldRight(l, Nil: List[A], (lst: List[A], acc: List[A]) => append(lst, acc))
+
+  def incrementEach(l: List[Int]): List[Int] =
+    foldRight(l, Nil: List[Int], (elem, acc) => Cons(elem + 1, acc))
+    //foldLeft(l, Nil: List[Int], (acc, elem) => Cons(elem + 1, acc)) => fail : inverse la List
 
   def doubleToString(l: List[Double]): List[String] = ???
 
