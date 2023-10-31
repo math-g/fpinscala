@@ -180,4 +180,10 @@ object List: // `List` companion object. Contains functions for creating and wor
         case (Cons(ha, ta), Cons(hb, tb)) => addPairWiseIter(Cons(f(ha, hb), acc), ta, tb)
     reverse(addPairWiseIter(Nil: List[C], a, b))
 
-  def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = ???
+  // Voir la réponse du livre, qui est différente.
+  def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean =
+    sub match
+      case Nil => true
+      case Cons(subH, subT) =>
+        length(filter(zipWith(dropWhile(sup, elem => elem != subH), sub,
+          (a, b) => a == b), elem => elem)) == length(sub)
