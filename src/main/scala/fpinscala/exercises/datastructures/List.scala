@@ -169,13 +169,15 @@ object List: // `List` companion object. Contains functions for creating and wor
      */
 
   // def zipWith - TODO determine signature
-  def zipWith[A](a: List[A], b: List[A], f: (A, A) => A): List[A] =
+
+  // il faut généraliser non seulement la fonction mais aussi les 3 types
+  def zipWith[A, B, C](a: List[A], b: List[B], f: (A, B) => C): List[C] =
     @tailrec
-    def addPairWiseIter(acc: List[A], aIter: List[A], bIter: List[A]): List[A] =
+    def addPairWiseIter(acc: List[C], aIter: List[A], bIter: List[B]): List[C] =
       (aIter, bIter) match
         case (Nil, _) => acc
         case (_, Nil) => acc
         case (Cons(ha, ta), Cons(hb, tb)) => addPairWiseIter(Cons(f(ha, hb), acc), ta, tb)
-    reverse(addPairWiseIter(Nil: List[A], a, b))
+    reverse(addPairWiseIter(Nil: List[C], a, b))
 
   def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = ???
