@@ -18,13 +18,15 @@ enum Tree[+A]:
     case Leaf(elem) => Leaf(f(elem))
     case Branch(l, r) => Branch(l.map(f), r.map(f))
 
-  def fold[B](f: A => B, g: (B,B) => B): B = ???
+  def fold[B](f: A => B, g: (B,B) => B): B = this match
+    case Leaf(elem) => f(elem)
+    case Branch(l, r) => g(l.fold(f, g), r.fold(f, g))
+
+  def sizeViaFold: Int = this.fold(_ => 1, 1 + _ + _)
   
-  def sizeViaFold: Int = ???
+  def depthViaFold: Int = this.fold(_ => 0, 1 + _.max(_))
   
-  def depthViaFold: Int = ???
-  
-  def mapViaFold[B](f: A => B): Tree[B] = ???
+  def mapViaFold[B](f: A => B): Tree[B] = this.fold(elem => Leaf(f(elem)), (l, r) => Branch(l, r))
 
 object Tree:
 
@@ -46,4 +48,4 @@ object Tree:
         val rval = r.maximum
         if lval > rval then lval else rval
 
-  extension (t: Tree[Int]) def maximumViaFold: Int = ???
+  extension (t: Tree[Int]) def maximumViaFold: Int = t.fold(elem => elem, (l, r) => if l > r then l else r)
