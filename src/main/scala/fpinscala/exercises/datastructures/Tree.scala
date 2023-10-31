@@ -8,7 +8,9 @@ enum Tree[+A]:
     case Leaf(_) => 1
     case Branch(l, r) => 1 + l.size + r.size
 
-  def depth: Int = ???
+  def depth: Int = this match
+    case Leaf(_) => 0
+    case Branch(l, r) => (1 + l.depth).max(1 + r.depth)
 
   def map[B](f: A => B): Tree[B] = ???
 
@@ -26,8 +28,18 @@ object Tree:
     case Leaf(_) => 1
     case Branch(l,r) => 1 + size(l) + size(r)
 
-  extension (t: Tree[Int]) def firstPositive: Int = ???
+  extension (t: Tree[Int]) def firstPositive: Int = t match
+    case Leaf(i) => i
+    case Branch(l, r) =>
+      val lpos = l.firstPositive
+      if lpos > 0 then lpos else r.firstPositive
 
-  extension (t: Tree[Int]) def maximum: Int = ???
+  extension (t: Tree[Int]) def maximum: Int =
+    t match
+      case Leaf(i) => i
+      case Branch(l, r) =>
+        val lval = l.maximum
+        val rval = r.maximum
+        if lval > rval then lval else rval
 
   extension (t: Tree[Int]) def maximumViaFold: Int = ???
