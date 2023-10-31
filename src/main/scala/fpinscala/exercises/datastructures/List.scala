@@ -146,10 +146,36 @@ object List: // `List` companion object. Contains functions for creating and wor
     // concat(map(as, f))
 
 
-  def filterViaFlatMap[A](as: List[A], f: A => Boolean): List[A] = ???
+  def filterViaFlatMap[A](as: List[A], f: A => Boolean): List[A] =
+    flatMap(as, a => if f(a) then Cons(a, Nil) else Nil)
 
-  def addPairwise(a: List[Int], b: List[Int]): List[Int] = ???
+  def addPairwise(a: List[Int], b: List[Int]): List[Int] =
+    @tailrec
+    def addPairWiseIter(acc: List[Int], aIter: List[Int], bIter: List[Int]): List[Int] =
+      aIter match
+        case Nil => acc
+        case Cons(ha, ta) =>
+          bIter match
+            case Nil => acc
+            case Cons(hb, tb) => addPairWiseIter(Cons(ha + hb, acc), ta, tb)
+    reverse(addPairWiseIter(Nil: List[Int], a, b))
+
+    /*
+    Solution du livre : possible de matcher sur deux valeurs. Pattern façon foldRight, non tail recursif.
+    (a, b) match
+      case (Nil, _) => Nil
+      case (_, Nil) => Nil
+      case (Cons(h1, t1), Cons(h2, t2)) => Cons(h1 + h2, addPairwise(t1, t2))
+     */
 
   // def zipWith - TODO determine signature
+  def zipWith[A](a: List[A], b: List[A], f: (A, A) => A): List[A] =
+    @tailrec
+    def addPairWiseIter(acc: List[A], aIter: List[A], bIter: List[A]): List[A] =
+      (aIter, bIter) match
+        case (Nil, _) => acc
+        case (_, Nil) => acc
+        case (Cons(ha, ta), Cons(hb, tb)) => addPairWiseIter(Cons(f(ha, hb), acc), ta, tb)
+    reverse(addPairWiseIter(Nil: List[A], a, b))
 
   def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = ???
