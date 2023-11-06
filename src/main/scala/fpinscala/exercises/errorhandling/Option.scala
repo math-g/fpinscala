@@ -56,8 +56,15 @@ object Option:
   def variance(xs: Seq[Double]): Option[Double] =
     mean(xs).flatMap(m => mean(xs.map(x => math.pow(x - m, 2))))
 
-  def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = ???
+  def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] =
+    /*(a, b) match
+      case (Some(a), Some(b)) => Some(f(a, b))
+      case _ => None
+     */
+    a.flatMap(a => b.map(b => f(a, b)))
 
-  def sequence[A](as: List[Option[A]]): Option[List[A]] = ???
+
+  def sequence[A](as: List[Option[A]]): Option[List[A]] =
+    as.foldRight(Some(List.empty: List[A]))((a, b) => map2(a, b)((a, b) => a :: b))
 
   def traverse[A, B](as: List[A])(f: A => Option[B]): Option[List[B]] = ???
