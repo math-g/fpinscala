@@ -26,10 +26,22 @@ enum Either[+E,+A]:
   // Un seul Either en argument contrairement à Option.map2 car ici c'est une méthode de l'instance.
   def map2[EE >: E, B, C](b: Either[EE, B])(f: (A, B) => C): Either[EE, C] =
     flatMap(a => b.map(b => f(a, b)))
+    /*
+    Alternative du livre :
+    for
+      a <- this
+      b <- that
+    yield f(a, b)
+     */
 
 object Either:
   def traverse[E,A,B](es: List[A])(f: A => Either[E, B]): Either[E, List[B]] =
     es.foldRight(Right(List.empty: List[B]): Either[E, List[B]])((a, ret) => ret.flatMap(acc => f(a).map(b => b :: acc)))
+    // Assai alternative : passe mais inutilement plus complexe par rapport à ci-après.
+    //es.foldRight[Either[E, List[B]]](Right(List.empty))((a, ret) => ret.map2(f(a))((lst, b) => b :: lst))
+    // Solution livre : noter comme il est possible et préférable de typer foldRight plutôt que l'accumulateur
+    // as.foldRight[Either[E, List[B]]](Right(Nil))((a, b) => f(a).map2(b)(_ :: _))
+
 
   def sequence[E,A](es: List[Either[E,A]]): Either[E,List[A]] =
     traverse(es)(ea => ea)
