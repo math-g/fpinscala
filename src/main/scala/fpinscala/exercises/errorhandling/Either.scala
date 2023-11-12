@@ -28,9 +28,11 @@ enum Either[+E,+A]:
     flatMap(a => b.map(b => f(a, b)))
 
 object Either:
-  def traverse[E,A,B](es: List[A])(f: A => Either[E, B]): Either[E, List[B]] = ???
+  def traverse[E,A,B](es: List[A])(f: A => Either[E, B]): Either[E, List[B]] =
+    es.foldRight(Right(List.empty: List[B]): Either[E, List[B]])((a, ret) => ret.flatMap(acc => f(a).map(b => b :: acc)))
 
-  def sequence[E,A](es: List[Either[E,A]]): Either[E,List[A]] = ???
+  def sequence[E,A](es: List[Either[E,A]]): Either[E,List[A]] =
+    traverse(es)(ea => ea)
 
   def mean(xs: IndexedSeq[Double]): Either[String, Double] = 
     if xs.isEmpty then
