@@ -8,13 +8,24 @@ enum Either[+E,+A]:
   case Left(get: E)
   case Right(get: A)
 
-  def map[B](f: A => B): Either[E, B] = ???
+  def map[B](f: A => B): Either[E, B] =
+    this match
+      case Left(e) => Left(e)
+      case Right(a) => Right(f(a))
 
-  def flatMap[EE >: E, B](f: A => Either[EE, B]): Either[EE, B] = ???
+  def flatMap[EE >: E, B](f: A => Either[EE, B]): Either[EE, B] =
+    this match
+      case Left(e) => Left(e)
+      case Right(a) => f(a)
 
-  def orElse[EE >: E, B >: A](b: => Either[EE, B]): Either[EE, B] = ???
+  def orElse[EE >: E, B >: A](b: => Either[EE, B]): Either[EE, B] =
+    this match
+      case Right(a) => this
+      case Left(e) => b
 
-  def map2[EE >: E, B, C](b: Either[EE, B])(f: (A, B) => C): Either[EE, C] = ???
+  // Un seul Either en argument contrairement à Option.map2 car ici c'est une méthode de l'instance.
+  def map2[EE >: E, B, C](b: Either[EE, B])(f: (A, B) => C): Either[EE, C] =
+    flatMap(a => b.map(b => f(a, b)))
 
 object Either:
   def traverse[E,A,B](es: List[A])(f: A => Either[E, B]): Either[E, List[B]] = ???
