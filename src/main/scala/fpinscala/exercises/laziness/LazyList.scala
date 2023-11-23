@@ -1,6 +1,6 @@
 package fpinscala.exercises.laziness
 
-import fpinscala.exercises.laziness.LazyList.cons
+import fpinscala.exercises.laziness.LazyList.{cons, empty}
 
 import scala.annotation.tailrec
 
@@ -32,9 +32,11 @@ enum LazyList[+A]:
   // Voir la réponse du livre : est-ce que le traitement du cas n == 1 est différent de ce qui est fait ici ?
   // Surtout, voir l'explication sur la question de thread safe ou non.
   // L'appel imbriqué de take a lieu sur l'instance de LazyList correspondant à la tail.
-  // Ce n'est pas un appel récursif de take depuis take.
+  // Pourquoi n'est-ce pas un appel récursif de take depuis take ?
+  // Car le second argument de cons est by name.
   def take(n: Int): LazyList[A] =
     //println(s"take $n : ${this.toList}")
+    println(s"take $n")
     this match
       case Empty => Empty
       case Cons(h, t) if n <= 0 => Empty
@@ -51,13 +53,23 @@ enum LazyList[+A]:
       case Cons(h, t) if n <= 0 => this
       case Cons(h, t) => t().drop(n - 1)
 
-  def takeWhile(p: A => Boolean): LazyList[A] = ???
+  def takeWhile(p: A => Boolean): LazyList[A] =
+    /*this match
+      case Empty => Empty
+      case Cons(h, t) if ! p(h()) => Empty
+      case Cons(h, t) => LazyList.cons(h(), t().takeWhile(p))*/
+    // En utilisant foldRight :
+    foldRight(LazyList.empty)((a, b) => if !p(a) then LazyList.empty else cons(a, b))
 
-  def forAll(p: A => Boolean): Boolean = ???
+  def forAll(p: A => Boolean): Boolean =
+    foldRight(true)((a, b) => p(a) && b)
 
-  def headOption: Option[A] = this match
+  def headOption: Option[A] = /*this match
     case Empty => None
     case Cons(h, _) => Some(h())
+     */
+    // En utilisant foldRight :
+    foldRight(None: Option[A])((a, b) => Some(a))
 
   // 5.7 map, filter, append, flatmap using foldRight. Part of the exercise is
   // writing your own function signatures.
