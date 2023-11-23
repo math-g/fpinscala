@@ -1,5 +1,7 @@
 package fpinscala.exercises.laziness
 
+import fpinscala.exercises.laziness.LazyList.cons
+
 import scala.annotation.tailrec
 
 enum LazyList[+A]:
@@ -27,15 +29,35 @@ enum LazyList[+A]:
     case Empty => None
     case Cons(h, t) => if (f(h())) Some(h()) else t().find(f)
 
-  def take(n: Int): LazyList[A] = ???
+  // Voir la réponse du livre : est-ce que le traitement du cas n == 1 est différent de ce qui est fait ici ?
+  // Surtout, voir l'explication sur la question de thread safe ou non.
+  // L'appel imbriqué de take a lieu sur l'instance de LazyList correspondant à la tail.
+  // Ce n'est pas un appel récursif de take depuis take.
+  def take(n: Int): LazyList[A] =
+    //println(s"take $n : ${this.toList}")
+    this match
+      case Empty => Empty
+      case Cons(h, t) if n <= 0 => Empty
+      case Cons(h, t) => LazyList.cons(h(), t().take(n - 1))
 
-  def drop(n: Int): LazyList[A] = ???
+  // Nécessaire d'ajouter final ici pour permettre @tailrec, sinon peut être surchargée.
+  // Le comportement thread safe de take me semble applicable ici aussi, donc est-ce vraiment une récursivité ?
+  // Cependant, on ne peut pas ajouter l'annotation @tailrec à take.
+  @tailrec
+  final def drop(n: Int): LazyList[A] =
+    //println(s"drop $n : ${this.toList}")
+    this match
+      case Empty => Empty
+      case Cons(h, t) if n <= 0 => this
+      case Cons(h, t) => t().drop(n - 1)
 
   def takeWhile(p: A => Boolean): LazyList[A] = ???
 
   def forAll(p: A => Boolean): Boolean = ???
 
-  def headOption: Option[A] = ???
+  def headOption: Option[A] = this match
+    case Empty => None
+    case Cons(h, _) => Some(h())
 
   // 5.7 map, filter, append, flatmap using foldRight. Part of the exercise is
   // writing your own function signatures.
@@ -44,7 +66,8 @@ enum LazyList[+A]:
 
 
 object LazyList:
-  def cons[A](hd: => A, tl: => LazyList[A]): LazyList[A] = 
+  def cons[A](hd: => A, tl: => LazyList[A]): LazyList[A] =
+    //println(s"cons : $hd , $tl")
     lazy val head = hd
     lazy val tail = tl
     Cons(() => head, () => tail)
