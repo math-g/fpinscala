@@ -1,6 +1,6 @@
 package fpinscala.exercises.laziness
 
-import fpinscala.exercises.laziness.LazyList.{cons, empty}
+import fpinscala.exercises.laziness.LazyList.{cons, empty, unfold}
 
 import scala.annotation.tailrec
 
@@ -86,6 +86,35 @@ enum LazyList[+A]:
   def flatMap[B](f: A => LazyList[B]): LazyList[B] =
     foldRight(empty)((a, b) => f(a).append(b))
 
+  def mapViaUnfold[B](f: A => B): LazyList[B] = unfold(this) {
+    case Cons(h, t) => Some((f(h()), t()))
+    case Empty => None
+  }
+
+  def takeViaUnfold(n: Int): LazyList[A] = unfold((this, n)) { state => state._1 match
+    case Empty => None
+    case Cons(h, t) if state._2 <= 0 => None
+    case Cons(h, t) => Some((h(), (t(), state._2 - 1)))
+  }
+
+  def takeWhileViaUnfold(p: A => Boolean): LazyList[A] = unfold(this) {
+    case Cons(h, t) if p(h()) => Some((h(), t()))
+    case _ => None
+  }
+
+  def zipWith[B, C](b: LazyList[B])(f: (A, B) => C): LazyList[C] = unfold((this, b)) {
+    case (Empty, _) => None
+    case (_, Empty) => None
+    case (Cons(h, t), Cons(bh, bt)) => Some(f(h(), bh()), (t(), bt()))
+  }
+
+  def zipAll[B](that: LazyList[B]): LazyList[(Option[A], Option[B])] = unfold((this, that)) {
+    case (Empty, Empty) => None
+    case (Empty, Cons(bh, bt)) => Some((None, Some(bh())), (Empty, bt()))
+    case (Cons(h, t), Empty) => Some((Some(h()), None), (t(), Empty))
+    case (Cons(h, t), Cons(bh, bt)) => Some((Some(h()), Some(bh())), (t(), bt()))
+  }
+
   def startsWith[B](s: LazyList[B]): Boolean = ???
 
 
@@ -128,3 +157,4 @@ object LazyList:
   def continuallyViaUnfold[A](a: A): LazyList[A] = unfold(a)(a => Some((a, a)))
 
   lazy val onesViaUnfold: LazyList[Int] = unfold(1)(one => Some((one, one)))
+
