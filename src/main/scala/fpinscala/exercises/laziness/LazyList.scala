@@ -36,7 +36,7 @@ enum LazyList[+A]:
   // Car le second argument de cons est by name.
   def take(n: Int): LazyList[A] =
     //println(s"take $n : ${this.toList}")
-    println(s"take $n")
+    //println(s"take $n")
     this match
       case Empty => Empty
       case Cons(h, t) if n <= 0 => Empty
@@ -44,6 +44,7 @@ enum LazyList[+A]:
 
   // Nécessaire d'ajouter final ici pour permettre @tailrec, sinon peut être surchargée.
   // Le comportement thread safe de take me semble applicable ici aussi, donc est-ce vraiment une récursivité ?
+  // C'est à dire, puisque tail est lazy, il n'y a pas de récursion.
   // Cependant, on ne peut pas ajouter l'annotation @tailrec à take.
   @tailrec
   final def drop(n: Int): LazyList[A] =
@@ -73,6 +74,17 @@ enum LazyList[+A]:
 
   // 5.7 map, filter, append, flatmap using foldRight. Part of the exercise is
   // writing your own function signatures.
+  def map[B](f: A => B): LazyList[B] =
+    foldRight(empty)((a, b) => cons(f(a), b))
+
+  def filter(f: A => Boolean): LazyList[A] =
+    foldRight(empty)((a, b) => if f(a) then cons(a, b) else b)
+
+  def append[B>:A](other: => LazyList[B]): LazyList[B] =
+    foldRight(other)((a, b) => cons(a, b))
+
+  def flatMap[B](f: A => LazyList[B]): LazyList[B] =
+    foldRight(empty)((a, b) => f(a).append(b))
 
   def startsWith[B](s: LazyList[B]): Boolean = ???
 
@@ -92,11 +104,13 @@ object LazyList:
 
   val ones: LazyList[Int] = LazyList.cons(1, ones)
 
-  def continually[A](a: A): LazyList[A] = ???
+  def continually[A](a: A): LazyList[A] = LazyList.cons(a, continually(a))
 
-  def from(n: Int): LazyList[Int] = ???
+  def from(n: Int): LazyList[Int] = LazyList.cons(n, from(n + 1))
 
-  lazy val fibs: LazyList[Int] = ???
+  lazy val fibs: LazyList[Int] =
+    def fibsIter(prev: Int, curr: Int): LazyList[Int] = LazyList.cons(prev + curr, fibsIter(curr, prev + curr))
+    LazyList.cons(0, LazyList.cons(1, fibsIter(0, 1)))
 
   def unfold[A, S](state: S)(f: S => Option[(A, S)]): LazyList[A] = ???
 

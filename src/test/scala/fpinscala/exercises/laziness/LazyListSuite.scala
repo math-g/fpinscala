@@ -40,6 +40,8 @@ class LazyListSuite extends PropSuite:
 
   test("LazyList.take")(genSmallInt ** genLazyList):
     case n ** lazyList =>
+      println()
+      println(s"$n ${lazyList.take(n)}")
       assertEquals(lazyList.take(n).toList, lazyList.toList.take(n))
 
   test("LazyList.drop")(genSmallInt ** genLazyList):
@@ -54,10 +56,11 @@ class LazyListSuite extends PropSuite:
     case n ** lazyList =>
       assertEquals(lazyList.forAll(_ != n), !lazyList.toList.contains(n))
 
-  /*
+
   test("LazyList.map")(genSmallInt ** genLazyList):
     case n ** lazyList =>
       assertEquals(lazyList.map(_ + n).toList, lazyList.toList.map(_ + n))
+
 
   test("LazyList.filter")(genSmallInt ** genLazyList):
     case n ** lazyList =>
@@ -70,7 +73,6 @@ class LazyListSuite extends PropSuite:
   test("LazyList.flatMap")(genSmallInt ** genLazyList):
     case n ** lazyList =>
       assertEquals(lazyList.flatMap(a => LazyList(a + n)).toList, lazyList.toList.flatMap(a => List(a + n)))
-   */
 
   test("LazyList.ones")(genMidInt): n =>
     assertEquals(ones.take(n).toList, List.fill(n)(1))
@@ -84,6 +86,7 @@ class LazyListSuite extends PropSuite:
       assertEquals(from(a).take(n).toList, (a until (a + n)).toList)
 
   test("LazyList.fib")(genLengthOfFibonacciSeq): n =>
+    println(s"fibs.take($n).toList : " + fibs.take(n).toList)
     assertEquals(fibs.take(n).toList, theFirst21FibonacciNumbers.take(n).toList)
 
   test("LazyList.unfold")(genMidInt): n =>
