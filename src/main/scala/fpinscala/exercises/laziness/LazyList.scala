@@ -112,12 +112,19 @@ object LazyList:
     def fibsIter(prev: Int, curr: Int): LazyList[Int] = LazyList.cons(prev + curr, fibsIter(curr, prev + curr))
     LazyList.cons(0, LazyList.cons(1, fibsIter(0, 1)))
 
-  def unfold[A, S](state: S)(f: S => Option[(A, S)]): LazyList[A] = ???
+  // Voir solution du livre. Je préfère peut-être celle-ci.
+  def unfold[A, S](state: S)(f: S => Option[(A, S)]): LazyList[A] =
+    f(state).map((a, s) => LazyList.cons(a, unfold(s)(f))).getOrElse(LazyList.empty)
 
-  lazy val fibsViaUnfold: LazyList[Int] = ???
+  // Voir solution du livre : le pattern matching évite la définition de la case class, et permet d'éviter
+  // de devoir fixer les deux premières valeurs avant de créer un fibState avec ces deux valeurs intiales.
+  lazy val fibsViaUnfold: LazyList[Int] =
+    case class fibState(prev: Int, curr: Int)
+    LazyList.cons(0, LazyList.cons(1,
+      unfold(fibState(0, 1))(state => Some((state.prev + state.curr, fibState(state.curr, state.prev + state.curr))))))
 
-  def fromViaUnfold(n: Int): LazyList[Int] = ???
+  def fromViaUnfold(n: Int): LazyList[Int] = unfold(n)(n => Some((n, n + 1)))
 
-  def continuallyViaUnfold[A](a: A): LazyList[A] = ???
+  def continuallyViaUnfold[A](a: A): LazyList[A] = unfold(a)(a => Some((a, a)))
 
-  lazy val onesViaUnfold: LazyList[Int] = ???
+  lazy val onesViaUnfold: LazyList[Int] = unfold(1)(one => Some((one, one)))
