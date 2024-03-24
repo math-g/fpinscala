@@ -130,14 +130,21 @@ class LazyListSuite extends PropSuite:
 
   test("LazyList.startsWith")(genLazyList ** genLazyList):
     case list1 ** list2 =>
+      println(s"list1 : ${list1.toList}")
+      println(s"list2 : ${list2.toList}")
+      println(s"${list1.zipWith(list2)((a, b) => (a, b)).toList}")
+      println(s"${list2.zipWith(list1)((a, b) => (a, b)).toList}")
       assertEquals(list1.startsWith(list2), list1.toList.startsWith(list2.toList))
       assert(list1.startsWith(empty))
       assert(list1.startsWith(list1))
 
-/*
   test("LazyList.tails")(genLazyList): lazyList =>
     val list = lazyList.toList
+    println(s"list : $list")
+    //println(s"lazyList.tails.toList : ${lazyList.tails.toList}")
+    println(s"lazyList.tails.toList.map(_.toList) : ${lazyList.tails.toList.map(_.toList)}")
     val expected = (0 to list.length).map(i => list.drop(i)).toList
+    println(s"expected : $expected")
     assertEquals(lazyList.tails.toList.map(_.toList), expected)
 
   test("LazyList.hasSubsequence")(genSmallInt ** genLazyList):
@@ -146,6 +153,7 @@ class LazyListSuite extends PropSuite:
       assert(list.hasSubsequence(list))
       assert(list.hasSubsequence(list.drop(n)))
 
+/*
   test("LazyList.hasSubsequence - random lazy lists")(genLazyList ** genLazyList):
     case list1 ** list2 =>
       assertEquals(list1.hasSubsequence(list2), list1.toList.containsSlice(list2.toList))
