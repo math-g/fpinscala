@@ -122,16 +122,26 @@ enum LazyList[+A]:
     case _ => zipWith(s)((a, b) => (a, b)).forAll(t => t._1 == t._2)
 
   def tails: LazyList[LazyList[A]] =
-    val lazyListWithoutElements = cons(LazyList.empty, LazyList.empty)
+    val emptyLazyList = cons(LazyList.empty, LazyList.empty)
     this match
-    case Empty => lazyListWithoutElements
+    case Empty => emptyLazyList
     case _ => unfold(this) {
       case Empty => None
       case current => Some((current, current.drop(1)))
-    }.append(lazyListWithoutElements)
+    }.append(emptyLazyList)
 
   def hasSubsequence[B](l: LazyList[B]): Boolean =
     tails.exists(_.startsWith(l))
+
+  def scanRight[B](z: => B)(f: (A, => B) => B): LazyList[B] =
+    val lastElem = cons(z, Empty)
+    def scanRightIter(l: LazyList[A]): LazyList[B] =
+      l match
+        case Empty => lastElem
+        case Cons(h, t) => cons(l.foldRight(z)(f), scanRightIter(l.drop(1)))
+    this match
+      case Empty => lastElem
+      case _ => scanRightIter(this)
 
 
 object LazyList:
