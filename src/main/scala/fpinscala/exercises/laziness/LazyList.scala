@@ -133,16 +133,13 @@ enum LazyList[+A]:
   def hasSubsequence[B](l: LazyList[B]): Boolean =
     tails.exists(_.startsWith(l))
 
+  // voir optim proposée dans la correction : nécessaire si ce sont les deux éléments du tuple qui sont accédés ?
+  // tout doit être parcouru également.
   def scanRight[B](z: => B)(f: (A, => B) => B): LazyList[B] =
-    val lastElem = cons(z, Empty)
-    def scanRightIter(l: LazyList[A]): LazyList[B] =
-      l match
-        case Empty => lastElem
-        case Cons(h, t) => cons(l.foldRight(z)(f), scanRightIter(l.drop(1)))
-    this match
-      case Empty => lastElem
-      case _ => scanRightIter(this)
-
+    foldRight(z, LazyList(z)) {(a, acc) =>
+      val head = f(a, acc._1)
+      (head, cons(head, acc._2))
+    }._2
 
 object LazyList:
   def cons[A](hd: => A, tl: => LazyList[A]): LazyList[A] =
