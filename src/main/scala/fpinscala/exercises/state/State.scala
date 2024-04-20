@@ -26,15 +26,32 @@ object RNG:
       val (a, rng2) = s(rng)
       (f(a), rng2)
 
-  def nonNegativeInt(rng: RNG): (Int, RNG) = ???
+  def nonNegativeInt(rng: RNG): (Int, RNG) =
+    val i = rng.nextInt
+    i match
+      case _ if i._1 == Int.MinValue => (Int.MaxValue, i._2)
+      case _ if i._1 < 0 => (-i._1, i._2)
+      case _ => i
 
-  def double(rng: RNG): (Double, RNG) = ???
+  def double(rng: RNG): (Double, RNG) =
+    val i = nonNegativeInt(rng)
+    (i._1.toDouble / Int.MaxValue.toDouble, i._2)
 
-  def intDouble(rng: RNG): ((Int,Double), RNG) = ???
+  def intDouble(rng: RNG): ((Int,Double), RNG) =
+    val next1 = rng.nextInt
+    val i = next1._1
+    val d = double(next1._2)
+    ((i, d._1), d._2)
 
-  def doubleInt(rng: RNG): ((Double,Int), RNG) = ???
+  def doubleInt(rng: RNG): ((Double,Int), RNG) =
+    val r = intDouble(rng)
+    ((r._1._2, r._1._1), r._2)
 
-  def double3(rng: RNG): ((Double,Double,Double), RNG) = ???
+  def double3(rng: RNG): ((Double,Double,Double), RNG) =
+    val d1 = double(rng)
+    val d2 = double(d1._2)
+    val d3 = double(d2._2)
+    ((d1._1, d2._1, d3._1), d3._2)
 
   def ints(count: Int)(rng: RNG): (List[Int], RNG) = ???
 
