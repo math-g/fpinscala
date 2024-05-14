@@ -1,5 +1,7 @@
 package fpinscala.exercises.state
 
+import scala.annotation.tailrec
+
 
 trait RNG:
   def nextInt: (Int, RNG) // Should generate a random `Int`. We'll later define other functions in terms of `nextInt`.
@@ -29,13 +31,12 @@ object RNG:
   def nonNegativeInt(rng: RNG): (Int, RNG) =
     val i = rng.nextInt
     i match
-      case _ if i._1 == Int.MinValue => (Int.MaxValue, i._2)
-      case _ if i._1 < 0 => (-i._1, i._2)
+      case _ if i._1 < 0 => (-(i._1 + 1), i._2)
       case _ => i
 
   def double(rng: RNG): (Double, RNG) =
     val i = nonNegativeInt(rng)
-    (i._1.toDouble / Int.MaxValue.toDouble, i._2)
+    (i._1.toDouble / (Int.MaxValue.toDouble + 1), i._2)
 
   def intDouble(rng: RNG): ((Int,Double), RNG) =
     val next1 = rng.nextInt
@@ -53,11 +54,28 @@ object RNG:
     val d3 = double(d2._2)
     ((d1._1, d2._1, d3._1), d3._2)
 
-  def ints(count: Int)(rng: RNG): (List[Int], RNG) = ???
+  def ints(count: Int)(rng: RNG): (List[Int], RNG) =
+    @tailrec
+    def intsIter(acc: List[Int], rng: RNG, range: List[Int]): (List[Int], RNG) =
+      val i = rng.nextInt
+      range match
+        case List() => (acc, rng)
+        case head :: tail => intsIter(i._1 :: acc, i._2, range.tail)
+    intsIter(List.empty, rng, Range.inclusive(1, count).toList)
 
-  def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
+  def _double: Rand[Double] = map(nonNegativeInt)(i => i.toDouble / (Int.MaxValue.toDouble + 1))
 
-  def sequence[A](rs: List[Rand[A]]): Rand[List[A]] = ???
+  def map2[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+    rng =>
+      val (a, rng1) = ra(rng)
+      val (b, rng2) = rb(rng1)
+      (f(a, b), rng2)
+
+  def sequence[A](rs: List[Rand[A]]): Rand[List[A]] =
+    val accInit : Rand[List[A]] = rng => (List.empty[A], rng)
+    rs.foldLeft(accInit) { (acc, rni) =>
+      map2(rni, acc) { (a, b) => a :: b }
+    }
 
   def flatMap[A, B](r: Rand[A])(f: A => Rand[B]): Rand[B] = ???
 
