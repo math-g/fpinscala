@@ -71,11 +71,17 @@ object RNG:
       val (b, rng2) = rb(rng1)
       (f(a, b), rng2)
 
+  // voir réponse : accInit est en fait unit
   def sequence[A](rs: List[Rand[A]]): Rand[List[A]] =
     val accInit : Rand[List[A]] = rng => (List.empty[A], rng)
     rs.foldLeft(accInit) { (acc, rni) =>
       map2(rni, acc) { (a, b) => a :: b }
     }
+
+  // voir réponse : rand(i) est int défini plus haut, et i est inutilisé.
+  def intsViaSequence(count: Int): Rand[List[Int]] =
+    def rand(i: Int): Rand[Int] = rng => rng.nextInt
+    sequence(Range.inclusive(1, count).toList.map(i => rand(i)))
 
   def flatMap[A, B](r: Rand[A])(f: A => Rand[B]): Rand[B] = ???
 

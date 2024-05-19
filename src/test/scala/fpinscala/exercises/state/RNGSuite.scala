@@ -86,6 +86,11 @@ class RNGSuite extends PropSuite:
       if lengthOfList <= 0 then assert(ints(rng)._1.isEmpty)
       else assert(checkRND(rng, counter, ints, list => list == list.distinct))
 
+  test("RNG.intsViaSequence")(genRNG ** genCounter ** genLengthOfList):
+    case rng ** counter ** lengthOfList =>
+      if lengthOfList <= 0 then assert(ints(lengthOfList)(rng)._1.isEmpty)
+      else assert(checkRND(rng, counter, intsViaSequence(lengthOfList), list => list == list.distinct))
+
   test("RNG.flatMap")(genRNG ** genCounter ** genSmallPosNum):
     case rng ** counter ** limit =>
       def nonNegativeLessThan(n: Int): Rand[Int] =
