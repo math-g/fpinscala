@@ -83,11 +83,23 @@ object RNG:
     def rand(i: Int): Rand[Int] = rng => rng.nextInt
     sequence(Range.inclusive(1, count).toList.map(i => rand(i)))
 
-  def flatMap[A, B](r: Rand[A])(f: A => Rand[B]): Rand[B] = ???
+  def flatMap[A, B](r: Rand[A])(f: A => Rand[B]): Rand[B] =
+    rng =>
+      val (a, rng1) = r(rng)
+      val rand  = f(a)
+      rand(rng1)
 
-  def mapViaFlatMap[A, B](r: Rand[A])(f: A => B): Rand[B] = ???
+  def mapViaFlatMap[A, B](r: Rand[A])(f: A => B): Rand[B] =
+    flatMap(r)((a: A) => (rng: RNG) => (f(a), rng))
 
-  def map2ViaFlatMap[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
+
+  def map2ViaFlatMap[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+    val t = flatMap(ra)((a: A) => (rng: RNG) =>
+      val rng2 = rb(rng)
+      val t2 = ((a, rng2._1), rng2._2)
+      t2
+    )
+    flatMap(t)((a: A, b: B) => (rng: RNG) => (f(a, b), t(rng)._2))
 
 opaque type State[S, +A] = S => (A, S)
 
@@ -96,13 +108,25 @@ object State:
     def run(s: S): (A, S) = underlying(s)
 
     def map[B](f: A => B): State[S, B] =
-      ???
+      state =>
+        val (a, nextState) = underlying(state)
+        (f(a), nextState)
 
     def map2[B, C](sb: State[S, B])(f: (A, B) => C): State[S, C] =
-      ???
+      state =>
+        val (a, nextState1) = underlying(state)
+        val (b, nextState2) = sb(nextState1)
+        (f(a, b), nextState2)
 
     def flatMap[B](f: A => State[S, B]): State[S, B] =
-      ???
+      state =>
+        val (a, nextState) = underlying(state)
+        f(a)(nextState)
+
+    def sequence[B](rs: List[State[S, B]]): State[S, List[B]] = ???
+
+  def unit[S, A](a: A): State[S, A] =
+    state => (a, state)
 
   def apply[S, A](f: S => (A, S)): State[S, A] = f
 
