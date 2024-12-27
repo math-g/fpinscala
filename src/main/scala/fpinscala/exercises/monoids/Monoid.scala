@@ -16,22 +16,34 @@ object Monoid:
     def combine(a1: List[A], a2: List[A]) = a1 ++ a2
     val empty = Nil
 
-  lazy val intAddition: Monoid[Int] = ???
+  lazy val intAddition: Monoid[Int] = new:
+    def combine(a1: Int, a2: Int): Int = a1 + a2
+    val empty = 0
 
-  lazy val intMultiplication: Monoid[Int] = ???
+  lazy val intMultiplication: Monoid[Int] = new:
+    def combine(a1: Int, a2: Int): Int = a1 * a2
+    val empty = 1
 
-  lazy val booleanOr: Monoid[Boolean] = ???
+  lazy val booleanOr: Monoid[Boolean] = new:
+    def combine(a1: Boolean, a2: Boolean) = a1 || a2
+    val empty = false
 
-  lazy val booleanAnd: Monoid[Boolean] = ???
+  lazy val booleanAnd: Monoid[Boolean] = new:
+    def combine(a1: Boolean, a2: Boolean) = a1 && a2
+    val empty = true
 
-  def optionMonoid[A]: Monoid[Option[A]] = ???
+  def optionMonoid[A]: Monoid[Option[A]] = new:
+    def combine(a1: Option[A], a2: Option[A]) = a1.orElse(a2)
+    val empty = None
 
   def dual[A](m: Monoid[A]): Monoid[A] = new:
     def combine(x: A, y: A): A = m.combine(y, x)
     val empty = m.empty
 
-  def endoMonoid[A]: Monoid[A => A] = ???
-
+  def endoMonoid[A]: Monoid[A => A] = new:
+    def combine(a1: A => A, a2: A => A) = a1.andThen(a2)
+    val empty = (a:A) => a
+  
   import fpinscala.exercises.testing.{Prop, Gen}
   // import Gen.`**`
 
@@ -41,13 +53,14 @@ object Monoid:
     ???
 
   def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B =
-    ???
+    as.foldLeft(m.empty)((acc, a) => m.combine(acc, f(a)))
 
   def foldRight[A, B](as: List[A])(acc: B)(f: (A, B) => B): B =
-    ???
+    foldMap(as, endoMonoid[B])(f.curried)(acc)
 
   def foldLeft[A, B](as: List[A])(acc: B)(f: (B, A) => B): B =
-    ???
+    val t = (a: A) => (b: B) => f(b, a)
+    foldMap(as, endoMonoid[B])(t)(acc)
 
   def foldMapV[A, B](as: IndexedSeq[A], m: Monoid[B])(f: A => B): B =
     ???
