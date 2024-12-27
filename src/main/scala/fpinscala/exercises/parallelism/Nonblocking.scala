@@ -1,5 +1,6 @@
 package fpinscala.exercises.parallelism
 
+import java.time.Instant
 import java.util.concurrent.{Callable, CountDownLatch, ExecutorService}
 import java.util.concurrent.atomic.AtomicReference
 
@@ -12,14 +13,20 @@ object Nonblocking:
   object Par:
 
     def unit[A](a: A): Par[A] =
-      es => cb => cb(a)
+      println(s"${Instant.now()} - ${Thread.currentThread().getId} - unit : def ($a)")
+      es => cb =>
+        println(s"${Instant.now()} - ${Thread.currentThread().getId} - unit : call($a) with $cb")
+        cb(a)
 
     /** A non-strict version of `unit` */
     def delay[A](a: => A): Par[A] =
       es => cb => cb(a)
 
     def fork[A](a: => Par[A]): Par[A] =
-      es => cb => eval(es)(a(es)(cb))
+      println(s"${Instant.now()} - ${Thread.currentThread().getId} - fork : def ($a)")
+      es => cb =>
+        println(s"${Instant.now()} - ${Thread.currentThread().getId} - fork : call($a) with ($es)($cb)")
+        eval(es)(a(es)(cb))
 
     /**
      * Helper function for constructing `Par` values out of calls to non-blocking continuation-passing-style APIs.
@@ -33,18 +40,30 @@ object Nonblocking:
      * asynchronously, using the given `ExecutorService`.
      */
     def eval(es: ExecutorService)(r: => Unit): Unit =
-      es.submit(new Callable[Unit] { def call = r })
+      println(s"${Instant.now()} - ${Thread.currentThread().getId} - eval : def ($r)")
+      es.submit(new Callable[Unit] {
+        println(s"${Instant.now()} - ${Thread.currentThread().getId} - eval : call")
+        def call = r
+      })
 
     extension [A](p: Par[A])
       def run(es: ExecutorService): A =
+        println(s"${Instant.now()} - ${Thread.currentThread().getId} - run : début")
         val ref = new AtomicReference[A] // A mutable, threadsafe reference, to use for storing the result
         val latch = new CountDownLatch(1) // A latch which, when decremented, implies that `ref` has the result
-        p(es) { a => ref.set(a); latch.countDown } // Asynchronously set the result, and decrement the latch
+        p(es) { a =>
+          println(s"${Instant.now()} - ${Thread.currentThread().getId} - run : dans cb run avec la valeur : $a")
+          ref.set(a); latch.countDown
+        } // Asynchronously set the result, and decrement the latch
+        println(s"${Instant.now()} - ${Thread.currentThread().getId} - run : latch await")
         latch.await // Block until the `latch.countDown` is invoked asynchronously
+        println(s"${Instant.now()} - ${Thread.currentThread().getId} - run : ref.get)")
         ref.get // Once we've passed the latch, we know `ref` has been set, and return its value
 
       def map2[B, C](p2: Par[B])(f: (A, B) => C): Par[C] =
+        println(s"${Instant.now()} - ${Thread.currentThread().getId} - map2 : def ($p2, $f)")
         es => cb =>
+          println(s"${Instant.now()} - ${Thread.currentThread().getId} - map2 : call ($es, $cb)")
           var ar: Option[A] = None
           var br: Option[B] = None
           // this implementation is a little too liberal in forking of threads -
@@ -52,16 +71,30 @@ object Nonblocking:
           // forks evaluation of the callback `cb`
           val combiner = Actor[Either[A,B]](es):
             case Left(a) =>
+              println(s"${Instant.now()} - ${Thread.currentThread().getId} - map 2 actor : left($a)")
               if br.isDefined then eval(es)(cb(f(a, br.get)))
               else ar = Some(a)
             case Right(b) =>
+              println(s"${Instant.now()} - ${Thread.currentThread().getId} - map 2 actor : right($b)")
               if ar.isDefined then eval(es)(cb(f(ar.get, b)))
               else br = Some(b)
-          p(es)(a => combiner ! Left(a))
-          p2(es)(b => combiner ! Right(b))
+          p(es)(a =>
+            println(s"${Instant.now()} - ${Thread.currentThread().getId} - map2 : exec left($a)")
+            combiner ! Left(a)
+          )
+          p2(es)(b =>
+            println(s"${Instant.now()} - ${Thread.currentThread().getId} - map2 : exec right($b)")
+            combiner ! Right(b)
+          )
 
       def map[B](f: A => B): Par[B] =
-        es => cb => p(es)(a => eval(es)(cb(f(a))))
+        println(s"${Instant.now()} - ${Thread.currentThread().getId} - map def ($f)")
+        es => cb =>
+          println(s"${Instant.now()} - ${Thread.currentThread().getId} - map : call ($es, $cb)")
+          p(es)(a =>
+            println(s"${Instant.now()} - ${Thread.currentThread().getId} - map exec $cb. - $a")
+            eval(es)(cb(f(a)))
+          )
 
       def flatMap[B](f: A => Par[B]): Par[B] =
         es => cb => p(es)(a => f(a)(es)(cb))
