@@ -92,7 +92,7 @@ object RNG:
   def mapViaFlatMap[A, B](r: Rand[A])(f: A => B): Rand[B] =
     flatMap(r)((a: A) => (rng: RNG) => (f(a), rng))
 
-
+  // voir la réponse du livre, plus simple avec map.
   def map2ViaFlatMap[A, B, C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
     val t = flatMap(ra)((a: A) => (rng: RNG) =>
       val rng2 = rb(rng)
@@ -122,8 +122,12 @@ object State:
       state =>
         val (a, nextState) = underlying(state)
         f(a)(nextState)
-
-    def sequence[B](rs: List[State[S, B]]): State[S, List[B]] = ???
+    
+  def sequence[S, A](rs: List[State[S, A]]): State[S, List[A]] =
+      val initialState: State[S, List[A]] = (state: S) => (List.empty[A], state) 
+      rs.foldRight(initialState){(s, acc) =>
+        s.map2(acc)((a: A, l: List[A]) => a :: l)
+      }
 
   def unit[S, A](a: A): State[S, A] =
     state => (a, state)

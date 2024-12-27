@@ -45,7 +45,6 @@ class StateSuite extends PropSuite:
     assertEquals(b, expectedB)
     assertEquals(s, list.drop(1))
 
-  /*
   test("State.sequence")(genStringList): list =>
     val half = list.length / 2
     val listOfStates = (0 until half).map(_ => stateA).toList
@@ -53,7 +52,6 @@ class StateSuite extends PropSuite:
     val (first, rest) = list.splitAt(half)
     assertEquals(firstHalfElements, first.map(Some(_)))
     assertEquals(restElements, rest)
-  */
 
   private def length(maybeHead: Option[String]): Int =
     maybeHead.getOrElse("").length
