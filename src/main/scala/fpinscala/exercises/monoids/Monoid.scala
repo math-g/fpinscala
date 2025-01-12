@@ -1,6 +1,9 @@
 package fpinscala.exercises.monoids
 
 import fpinscala.exercises.parallelism.Nonblocking.*
+import fpinscala.exercises.parallelism.Nonblocking.Par.{asyncF, delay, eval}
+
+import java.util.concurrent.{ExecutorService, Executors}
 
 trait Monoid[A]:
   def combine(a1: A, a2: A): A
@@ -63,16 +66,28 @@ object Monoid:
     foldMap(as, endoMonoid[B])(t)(acc)
 
   def foldMapV[A, B](as: IndexedSeq[A], m: Monoid[B])(f: A => B): B =
-    ???
+    if as.isEmpty then m.empty
+    else if as.size == 1 then f(as.head)
+    else
+      val (l, r) = as.splitAt(as.size / 2)
+      m.combine(foldMapV(l, m)(f), foldMapV(r, m)(f))
 
-  def par[A](m: Monoid[A]): Monoid[Par[A]] = 
-    ???
+  def par[A](m: Monoid[A]): Monoid[Par[A]] = new:
+    def combine(p1: Par[A], p2: Par[A]) = p1.map2(p2)(m.combine)
+    val empty = Par.unit(m.empty)
+    
 
-  def parFoldMap[A,B](v: IndexedSeq[A], m: Monoid[B])(f: A => B): Par[B] = 
-    ???
+  def parFoldMap[A,B](v: IndexedSeq[A], m: Monoid[B])(f: A => B): Par[B] =
+    val t = par(m).empty
+    foldMapV(v, par(m))(asyncF(f))
 
   def ordered(ints: IndexedSeq[Int]): Boolean =
-    ???
+    case class OrderStatus(value: Int, ordered: Boolean)
+    lazy val intDiff: Monoid[OrderStatus] = new:
+      def combine(a1: OrderStatus, a2: OrderStatus): OrderStatus =
+        OrderStatus(a2.value, a1.ordered && a2.ordered && a1.value <= a2.value)
+      val empty = OrderStatus(Int.MinValue, true)
+    foldMapV(ints, intDiff)(i => OrderStatus(i, true)).ordered
 
   enum WC:
     case Stub(chars: String)
